@@ -94,106 +94,158 @@ The Gold layer leverages dimensional modeling to optimize analytical queries and
 
 ![Gold Image](assets/gold.png)
 
-## 4. Data Modeling Decisions
+## 4. Data Modeling
 
-### Gold Layer Modeling Strategy
+### Modeling Trade-offs: Star Schema vs Snowflake Schema vs One Big Table
 
-The Gold layer was designed using a dimensional modeling approach (Star Schema) to optimize analytical workloads and reporting performance.
+During the design of the Gold layer, three common analytical modeling approaches were evaluated:
 
-The central fact table, `flights`, contains operational flight events and references multiple dimensions:
+1. Star Schema
+2. Snowflake Schema
+3. One Big Table (OBT)
 
-* Airports
-* Airlines
-* Route Types
-* Authorization Types
+The following section summarizes the trade-offs between these approaches and explains why Star Schema was selected.
 
-This design provides a balance between query performance, usability, and maintainability.
+### Comparison
 
-## Advantages
+| Criteria              | Star Schema | Snowflake Schema | One Big Table (OBT) |
+| --------------------- | ----------- | ---------------- | ------------------- |
+| Query Simplicity      | High        | Medium           | Very High           |
+| Number of Joins       | Medium      | High             | None                |
+| Storage Efficiency    | Medium      | High             | Low                 |
+| Data Redundancy       | Medium      | Low              | High                |
+| ETL Complexity        | Medium      | High             | Low                 |
+| Business Usability    | High        | Medium           | High                |
+| Scalability           | High        | High             | Medium              |
+| Historical Tracking   | Medium      | Medium           | Difficult           |
+| BI Tool Compatibility | Excellent   | Good             | Excellent           |
 
-### 1. Improved Query Performance
+## Star Schema
 
-Dimension tables reduce data redundancy and enable efficient joins during analytical queries.
+### Advantages
 
-Benefits include:
+* Easy for analysts and business users to understand.
+* Well-supported by BI tools.
+* Reduces data duplication compared to flat tables.
+* Good balance between performance and maintainability.
+* Scales well as new dimensions are added.
 
-* Faster aggregations.
-* Reduced storage consumption.
-* Better performance for BI tools.
+### Limitations
 
-### 2. Simplified Business Analytics
+* Queries require joins between fact and dimension tables.
+* ETL pipelines must resolve surrogate keys.
+* Historical tracking requires additional patterns such as SCD Type 2.
+* Large fact tables may become expensive to maintain over time.
 
-Business users can easily understand the model because it follows a standard dimensional design.
+## Snowflake Schema
 
-Examples:
+Snowflake Schema extends Star Schema by further normalizing dimensions.
 
-* Analyze delays by airline.
-* Analyze flight volume by airport.
-* Analyze operational performance by route type.
-* Track authorization status trends.
+Example:
 
-### 3. Better Data Governance
+```text
+Airports
+    └── Countries
+           └── Regions
+```
 
-Reference data such as airlines, airports, route types, and authorization types are managed independently from operational flight records.
+### Advantages
 
-Benefits:
+* Reduced data duplication.
+* Better data consistency.
+* Lower storage consumption.
 
-* Easier maintenance.
-* Consistent business definitions.
-* Reduced risk of duplicated information.
+### Limitations
 
-### 4. Scalability
+* Increased number of joins.
+* More complex queries.
+* Harder for business users to understand.
+* Query performance may degrade due to deep join chains.
 
-New dimensions can be introduced without impacting existing analytical workloads.
+For aviation analytics, Snowflake Schema would introduce additional complexity without providing significant business value.
 
-Examples:
+## One Big Table (OBT)
 
-* Aircraft Dimension
-* Weather Dimension
-* Calendar Dimension
-* Region Dimension
+A One Big Table approach stores all information in a single denormalized table.
 
-## Trade-offs and Limitations
+Example:
 
-### 1. Additional Joins Required
+```text
+flight_id
+flight_number
+airline_name
+airline_icao
+origin_airport_name
+origin_city
+destination_airport_name
+destination_city
+route_type
+authorization_type
+...
+```
 
-Analytical queries require joins between the fact table and dimensions.
+### Advantages
+
+* No joins required.
+* Extremely simple queries.
+* Excellent performance for dashboard workloads.
+* Easy for analysts to consume.
 
 Example:
 
 ```sql
 SELECT
-    a.name,
+    airline_name,
     COUNT(*)
-FROM gold.flights f
-JOIN gold.airlines a
-    ON f.airline_id = a.airline_id
-GROUP BY a.name;
+FROM flights_obt
+GROUP BY airline_name;
 ```
 
-While Databricks handles these joins efficiently, query complexity increases compared to a fully denormalized model.
+### Limitations
 
----
+* High data duplication.
+* Increased storage costs.
+* Difficult maintenance when business attributes change.
+* Data quality issues can propagate across millions of rows.
+* Historical corrections require expensive updates.
 
-### 2. ETL Complexity
+For example, if an airline changes its name, every related flight record may need to be updated.
 
-The Gold layer requires surrogate key resolution and data enrichment from the Silver layer.
+## Handling Time-Based Data and Joins
 
-Examples:
+One common criticism of Star Schema is the growing complexity of joins and historical data management.
 
-* Mapping airline ICAO codes to airline IDs.
-* Mapping airport ICAO codes to airport IDs.
-* Mapping route codes to route type dimensions.
+### What OBT Solves
 
-This increases transformation complexity but improves data consistency.
+A One Big Table eliminates joins by precomputing and storing all business attributes in a single dataset.
 
-### 3. Historical Tracking Not Implemented
+Benefits:
 
-The current model stores only the latest version of dimension records.
+* Faster dashboard queries.
+* Simpler SQL.
+* Better user experience for self-service analytics.
 
-For example:
+### What OBT Does Not Solve
 
-* Airline status changes overwrite previous values.
-* Airport metadata changes are not historically preserved.
+OBT introduces challenges for historical data:
 
-If historical analysis becomes necessary, Slowly Changing Dimensions (SCD Type 2) should be implemented.
+* Airline attribute changes affect many rows.
+* Airport metadata corrections require large updates.
+* Storage grows significantly over time.
+
+As datasets grow, maintaining consistency becomes increasingly difficult.
+
+## Why Star Schema Was Selected
+
+The Gold layer prioritizes:
+
+* Data consistency.
+* Analytical flexibility.
+* Maintainability.
+* Scalability.
+
+While OBT provides simpler queries, the increase in data redundancy and maintenance costs outweighs its benefits for this project.
+
+Star Schema offers a balanced approach, providing efficient analytics while preserving data quality and governance.
+
+For large-scale analytics platforms, a common strategy is to maintain Star Schema as the source of truth and create OBTs or aggregated tables for specific dashboard use cases when query performance becomes a concern.
