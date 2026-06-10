@@ -93,3 +93,130 @@ Data Modeling
 The Gold layer leverages dimensional modeling to optimize analytical queries and support efficient reporting and business intelligence workloads.
 
 ![Gold Image](assets/gold.png)
+
+## 4. Data Modeling Decisions
+
+### Gold Layer Modeling Strategy
+
+The Gold layer was designed using a dimensional modeling approach (Star Schema) to optimize analytical workloads and reporting performance.
+
+The central fact table, `flights`, contains operational flight events and references multiple dimensions:
+
+* Airports
+* Airlines
+* Route Types
+* Authorization Types
+
+This design provides a balance between query performance, usability, and maintainability.
+
+---
+
+## Advantages
+
+### 1. Improved Query Performance
+
+Dimension tables reduce data redundancy and enable efficient joins during analytical queries.
+
+Benefits include:
+
+* Faster aggregations.
+* Reduced storage consumption.
+* Better performance for BI tools.
+
+---
+
+### 2. Simplified Business Analytics
+
+Business users can easily understand the model because it follows a standard dimensional design.
+
+Examples:
+
+* Analyze delays by airline.
+* Analyze flight volume by airport.
+* Analyze operational performance by route type.
+* Track authorization status trends.
+
+---
+
+### 3. Better Data Governance
+
+Reference data such as airlines, airports, route types, and authorization types are managed independently from operational flight records.
+
+Benefits:
+
+* Easier maintenance.
+* Consistent business definitions.
+* Reduced risk of duplicated information.
+
+---
+
+### 4. Scalability
+
+New dimensions can be introduced without impacting existing analytical workloads.
+
+Examples:
+
+* Aircraft Dimension
+* Weather Dimension
+* Calendar Dimension
+* Region Dimension
+
+---
+
+## Trade-offs and Limitations
+
+### 1. Additional Joins Required
+
+Analytical queries require joins between the fact table and dimensions.
+
+Example:
+
+```sql
+SELECT
+    a.name,
+    COUNT(*)
+FROM gold.flights f
+JOIN gold.airlines a
+    ON f.airline_id = a.airline_id
+GROUP BY a.name;
+```
+
+While Databricks handles these joins efficiently, query complexity increases compared to a fully denormalized model.
+
+---
+
+### 2. ETL Complexity
+
+The Gold layer requires surrogate key resolution and data enrichment from the Silver layer.
+
+Examples:
+
+* Mapping airline ICAO codes to airline IDs.
+* Mapping airport ICAO codes to airport IDs.
+* Mapping route codes to route type dimensions.
+
+This increases transformation complexity but improves data consistency.
+
+---
+
+### 3. Historical Tracking Not Implemented
+
+The current model stores only the latest version of dimension records.
+
+For example:
+
+* Airline status changes overwrite previous values.
+* Airport metadata changes are not historically preserved.
+
+If historical analysis becomes necessary, Slowly Changing Dimensions (SCD Type 2) should be implemented.
+
+---
+
+## Design Rationale
+
+The chosen model prioritizes:
+
+1. Analytical performance.
+2. Data consistency.
+3. Ease of use for reporting tools.
+4. Future scalability.
