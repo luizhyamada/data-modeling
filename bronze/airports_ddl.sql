@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS bronze.airports (
+    airport_id  INT,
+    name        STRING,
+    city        STRING,
+    country     STRING,
+    iata        STRING,
+    icao        STRING,
+    latitude    DOUBLE,
+    longitude   DOUBLE,
+    altitude    INT,
+    timezone    STRING,
+    dst         STRING,
+    tz          STRING,
+    type        STRING,
+    source      STRING,
+    _source_file STRING,
+    _ingestion_date DATE,
+    created_at  TIMESTAMP,
+    updated_at  TIMESTAMP
+) USING DELTA;
