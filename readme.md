@@ -1,7 +1,7 @@
 # Data Modeling
 
 ## 1. Overview
-###Objective
+### Objective
 This project aims to process, transform, and make data available for analytics and consumption by analytical applications through a Lakehouse architecture implemented on Databricks.
 
 The architecture follows a medallion structure approach:
