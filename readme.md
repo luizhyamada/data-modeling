@@ -109,8 +109,6 @@ The central fact table, `flights`, contains operational flight events and refere
 
 This design provides a balance between query performance, usability, and maintainability.
 
----
-
 ## Advantages
 
 ### 1. Improved Query Performance
@@ -123,8 +121,6 @@ Benefits include:
 * Reduced storage consumption.
 * Better performance for BI tools.
 
----
-
 ### 2. Simplified Business Analytics
 
 Business users can easily understand the model because it follows a standard dimensional design.
@@ -136,8 +132,6 @@ Examples:
 * Analyze operational performance by route type.
 * Track authorization status trends.
 
----
-
 ### 3. Better Data Governance
 
 Reference data such as airlines, airports, route types, and authorization types are managed independently from operational flight records.
@@ -147,8 +141,6 @@ Benefits:
 * Easier maintenance.
 * Consistent business definitions.
 * Reduced risk of duplicated information.
-
----
 
 ### 4. Scalability
 
@@ -160,8 +152,6 @@ Examples:
 * Weather Dimension
 * Calendar Dimension
 * Region Dimension
-
----
 
 ## Trade-offs and Limitations
 
@@ -197,8 +187,6 @@ Examples:
 
 This increases transformation complexity but improves data consistency.
 
----
-
 ### 3. Historical Tracking Not Implemented
 
 The current model stores only the latest version of dimension records.
@@ -209,8 +197,6 @@ For example:
 * Airport metadata changes are not historically preserved.
 
 If historical analysis becomes necessary, Slowly Changing Dimensions (SCD Type 2) should be implemented.
-
----
 
 ## Design Rationale
 
