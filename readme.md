@@ -31,6 +31,29 @@ This layer is responsible for the initial storage of files received from data so
 * Ensure data traceability.
 * Serve as a recovery layer in case of processing failures.
 
+### 3.2 Bronze Layer
+
+#### Objective
+
+Persist data exactly as it is received from the Staging layer, preserving the original structure and content of the source data.
+
+#### Characteristics
+
+* Data stored in Delta Lake format.
+* Schema closely aligned with the source systems.
+* Minimal or no business transformations applied.
+* Inclusion of technical and audit-related columns.
+
+#### Applied Transformations
+
+* Conversion of source files into Delta format.
+* Addition of metadata fields, including:
+
+  * `_source_file`
+  * `_ingestion_date`
+  * `created_at`
+  * `updated_at`
+
 ### 3.3 Silver Layer
 #### Objective
 
