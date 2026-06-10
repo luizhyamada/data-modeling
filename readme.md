@@ -197,12 +197,3 @@ For example:
 * Airport metadata changes are not historically preserved.
 
 If historical analysis becomes necessary, Slowly Changing Dimensions (SCD Type 2) should be implemented.
-
-## Design Rationale
-
-The chosen model prioritizes:
-
-1. Analytical performance.
-2. Data consistency.
-3. Ease of use for reporting tools.
-4. Future scalability.
